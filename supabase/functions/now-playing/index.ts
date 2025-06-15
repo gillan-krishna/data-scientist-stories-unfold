@@ -1,66 +1,11 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 
-const SPOTIFY_CLIENT_ID = Deno.env.get('SPOTIFY_CLIENT_ID')!
-const SPOTIFY_CLIENT_SECRET = Deno.env.get('SPOTIFY_CLIENT_SECRET')!
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
+const SPOTIFY_USER_TOKEN = 'BQA_MHfHeIBQwjzb961-hyLYZf-de7-JB1_bfJkOa4hWmrolCFx--pWz_6xAD8T_VFi4_fPaQeAMjWPPSjBa_3-sGs1qeU1zcxcI09YuA56x-stK6_m785cH3OIQ1PU-YQSN3wh0oL7AfC_gRcn-z38N8xk9SMZz1o2Evdsc7rebS7mojFNjLm3PzSHbFBjhtrqm9glbjbp5golJFwZjaQR9HPKYUP6HW4DH5j9xSrP1J6oI7kebwlX_nhcmb5ZXpupcFOqeQnrsN--DAIhk-hR0rrt3GRkpeWQGciiNAgQO7zmnm3pB9Q-H6jWwza6sDJHv';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-const getAccessToken = async (supabase) => {
-  let { data: tokenData, error: tokenError } = await supabase
-    .from('spotify_tokens')
-    .select('*')
-    .eq('id', 1)
-    .maybeSingle()
-
-  if (tokenError || !tokenData) {
-    console.error('Token fetch error:', tokenError);
-    throw new Error('No tokens found. Please authenticate with Spotify.')
-  }
-
-  if (new Date(tokenData.expires_at) < new Date()) {
-    const response = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: 'Basic ' + btoa(SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET),
-      },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: tokenData.refresh_token,
-      }),
-    })
-
-    if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Spotify token refresh error:', errorText)
-        throw new Error(`Failed to refresh Spotify token: ${errorText}`)
-    }
-
-    const newTokens = await response.json()
-    const expires_at = new Date(Date.now() + newTokens.expires_in * 1000).toISOString()
-
-    const { error: updateError } = await supabase.from('spotify_tokens').update({
-      access_token: newTokens.access_token,
-      expires_at,
-      ...(newTokens.refresh_token && { refresh_token: newTokens.refresh_token }),
-    }).eq('id', 1)
-
-    if (updateError) {
-      console.error('Failed to update tokens in Supabase:', updateError)
-      throw updateError
-    }
-    
-    return newTokens.access_token
-  }
-
-  return tokenData.access_token
 }
 
 serve(async (req) => {
@@ -69,12 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-    const accessToken = await getAccessToken(supabase)
-
     const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${SPOTIFY_USER_TOKEN}`,
       },
     })
 
