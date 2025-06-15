@@ -1,10 +1,25 @@
+
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Music, AlertCircle } from "lucide-react";
+import { Music, AlertCircle, Laptop, Speaker, Smartphone } from "lucide-react";
+
+const getDeviceIcon = (deviceType?: string) => {
+  const iconProps = { size: 14, className: "mr-2" };
+  switch (deviceType?.toLowerCase()) {
+    case 'computer':
+      return <Laptop {...iconProps} />;
+    case 'smartphone':
+      return <Smartphone {...iconProps} />;
+    case 'speaker':
+      return <Speaker {...iconProps} />;
+    default:
+      return null;
+  }
+};
 
 const NowPlaying = () => {
   const { data: nowPlayingData, isLoading, error, refetch } = useQuery({
@@ -97,6 +112,12 @@ const NowPlaying = () => {
                       </a>
                       <p className="text-muted-foreground">{nowPlayingData.artist}</p>
                       <p className="text-sm text-muted-foreground">{nowPlayingData.album}</p>
+                      {nowPlayingData.device?.name && (
+                        <div className="flex items-center text-xs text-muted-foreground mt-2">
+                          {getDeviceIcon(nowPlayingData.device.type)}
+                          <span>Playing on {nowPlayingData.device.name}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -122,6 +143,7 @@ const NowPlayingSkeleton = () => (
       <Skeleton className="h-6 w-3/4" />
       <Skeleton className="h-4 w-1/2" />
       <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="h-4 w-1/3" />
     </div>
   </div>
 );

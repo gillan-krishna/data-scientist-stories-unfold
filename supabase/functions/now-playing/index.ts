@@ -105,6 +105,10 @@ serve(async (req) => {
       album: song.item.album.name,
       albumImageUrl: song.item.album.images[0]?.url,
       songUrl: song.item.external_urls.spotify,
+      device: song.device ? {
+        name: song.device.name,
+        type: song.device.type,
+      } : null,
     }
 
     return new Response(JSON.stringify(songData), {
