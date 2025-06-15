@@ -1,13 +1,18 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import Layout from "@/components/Layout";
+import Timeline from "@/components/Timeline";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <Layout>
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-bold mb-4 tracking-tight">AI research and products that put safety at the frontier</h1>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          A personal journey through my achievements, putting passion and learning at the frontier of technology.
+        </p>
       </div>
-    </div>
+      <Timeline />
+    </Layout>
   );
 };
 
