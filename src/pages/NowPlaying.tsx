@@ -1,4 +1,3 @@
-
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
@@ -28,40 +27,21 @@ const NowPlaying = () => {
       const { data, error } = await supabase.functions.invoke('now-playing');
       
       if (error) {
-        // The FunctionsHttpError from Supabase wraps the actual response.
-        // The body is in `error.context`. If the function returns a JSON with an "error" key,
-        // we use that as the error message.
         if (error.context && error.context.error) {
           throw new Error(error.context.error);
         }
-        // Otherwise, we fall back to the generic error message from the client.
         throw new Error(error.message || 'An unknown error occurred');
       }
-
-      // Sometimes the function returns a 200 but with an error in the body.
       if (data && data.error) {
         throw new Error(data.error);
       }
-      
       return data;
     },
     refetchInterval: 30000,
     retry: (failureCount, error) => {
-      if (error.message.includes('No tokens found')) {
-        return false;
-      }
       return failureCount < 3;
     },
   });
-
-  const handleLogin = async () => {
-    const { data } = await supabase.functions.invoke('get-spotify-auth-url');
-    if (data.url) {
-      window.location.href = data.url;
-    }
-  };
-
-  const needsLogin = error && error.message.includes('No tokens found');
 
   return (
     <Layout>
@@ -79,22 +59,12 @@ const NowPlaying = () => {
           </CardHeader>
           <CardContent>
             {isLoading && <NowPlayingSkeleton />}
-            {error && !needsLogin && (
+            {error && (
               <div className="flex flex-col items-center justify-center text-destructive p-4">
                 <AlertCircle className="w-12 h-12 mb-4" />
                 <p className="font-semibold">An error occurred</p>
                 <p className="text-sm text-center">{error.message}</p>
                 <Button onClick={() => refetch()} variant="outline" className="mt-4">Try Again</Button>
-              </div>
-            )}
-            {needsLogin && (
-              <div className="text-center p-4">
-                <p className="mb-4 text-muted-foreground">
-                  Connect your Spotify account to see what's playing.
-                </p>
-                <Button onClick={handleLogin}>
-                  Connect to Spotify
-                </Button>
               </div>
             )}
             {nowPlayingData && !isLoading && !error && (
