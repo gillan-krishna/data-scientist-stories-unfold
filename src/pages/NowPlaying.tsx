@@ -12,7 +12,14 @@ const NowPlaying = () => {
     queryKey: ['now-playing'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('now-playing');
-      if (error) throw new Error(error.message || 'An unknown error occurred');
+      if (error) {
+        // The FunctionsHttpError from Supabase wraps the actual response.
+        // We need to look inside `error.context` for the body of the function's response.
+        if (error.context && typeof error.context.error === 'string') {
+          throw new Error(error.context.error);
+        }
+        throw new Error(error.message || 'An unknown error occurred');
+      }
       if (data.error) throw new Error(data.error);
       return data;
     },
