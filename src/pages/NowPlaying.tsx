@@ -1,4 +1,3 @@
-
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
@@ -12,15 +11,23 @@ const NowPlaying = () => {
     queryKey: ['now-playing'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('now-playing');
+      
       if (error) {
         // The FunctionsHttpError from Supabase wraps the actual response.
-        // We need to look inside `error.context` for the body of the function's response.
-        if (error.context && typeof error.context.error === 'string') {
+        // The body is in `error.context`. If the function returns a JSON with an "error" key,
+        // we use that as the error message.
+        if (error.context && error.context.error) {
           throw new Error(error.context.error);
         }
+        // Otherwise, we fall back to the generic error message from the client.
         throw new Error(error.message || 'An unknown error occurred');
       }
-      if (data.error) throw new Error(data.error);
+
+      // Sometimes the function returns a 200 but with an error in the body.
+      if (data && data.error) {
+        throw new Error(data.error);
+      }
+      
       return data;
     },
     refetchInterval: 30000,
